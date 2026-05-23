@@ -32,7 +32,7 @@ database_pilot_v2 <- readr::read_csv("Final_phase_Article/database/database_pilo
          pretrial_document_type) %>% 
   add_column(phase_pilot=1)
 
-database_v2 <- read_csv("Final_phase_Article/database/database_covidence_v1.csv") %>% 
+database_v2 <- read_csv("Final_phase_Article/database/database_vapril27.csv") %>% 
   dplyr::select(key, 
                 outcome,
                 condordance_aim,
@@ -48,27 +48,27 @@ database_v2 <- read_csv("Final_phase_Article/database/database_covidence_v1.csv"
 total_87_167 <- rbind(database_pilot_v2, database_v2)
  
 total_87_167_v1 <- total_87_167 %>% 
-  mutate(outcome = factor(outcome,levels=c(1,0),
-                          labels =c("Fulfilling criteria","Not fulfilling criteria")),
-         condordance_aim = factor(condordance_aim,levels=c(1,0,2),
-                                  labels =c("Yes ", "No ", "Discordant trial aim between pretrial document and final RCT")),
+  mutate(outcome = factor(outcome,levels=c(1,0,999),
+                          labels =c("Yes","No","999")),
+         condordance_aim = factor(condordance_aim,levels=c(1,0,2,999),
+                                  labels =c("Yes ", "No ", "Discrepancy between pretrial document and final RCT", "Not applicable")),
          condordance_primary_endpoint= factor(condordance_primary_endpoint,levels=c(1,0,2, 999),
-                                              labels =c("Yes", "No", "Discordant endpoints between pretrial document and final RCT",
-                                                        "Not available")),
+                                              labels =c("Yes", "No", "Discrepancy between pretrial document and final RCT",
+                                                        "Not applicable")),
          condordance_design_aim= factor(condordance_design_aim,levels=c(1,0,3,999), 
                                         labels =c("Yes", "No",
-                                                  "Discordant design aim/ reported aim between pretrial document and final RCT",
-                                                  "Not available")),
+                                                  "Discrepancy between pretrial document and final RCT",
+                                                  "Not applicable")),
          condordance_sample_size= factor(condordance_sample_size,levels=c(1,0,2,999),
-                                         labels =c("Yes", "No","Discordant delta between pretrial document and final RCT", "Not available")),
+                                         labels =c("Yes", "No","Discrepancy between pretrial document and final RCT", "Not applicable")),
          RCT_clinical_discussion_interpretation= factor(RCT_clinical_discussion_interpretation,
                                                         levels=c(1,0,999),
-                                                        labels =c("Yes", "No", "Not available")),
+                                                        labels =c("Yes", "No", "Not applicable")),
          final_publication_significant_results=factor(final_publication_significant_results,
                                                       levels=c(1,0,999),
-                                                      labels =c("Yes", "No", "Not available")),
+                                                      labels =c("Yes", "No", "Not applicable")),
          pretrial_document_type = factor(pretrial_document_type,levels=c(1,2,3,999),
-                                         labels =c("Published protocol", "Unpublished protocol", "Registry only", "Not available" )),
+                                         labels =c("Published protocol", "Unpublished protocol", "Registry only", "No document")),
          phase_pilot = factor(phase_pilot, levels=c(1,0), labels=c("Pilot", "Final") )
   )
 
@@ -91,9 +91,9 @@ total_87_167_v1[, discrete_variables] <- lapply(
 #create labels
 labels_table_1 <- list(
   "outcome"~"RCTs fulfilling four criteria",
-  "condordance_aim"~"Study hypothesis specified",
-  "condordance_design_aim"~"Trial design aligned with study hypothesis",
-  "condordance_primary_endpoint"~"Primary endpoint specified",
+  "condordance_primary_endpoint"~"Reported specific primary outcome",
+  #  "condordance_aim"~"Study hypothesis specified",
+  "condordance_design_aim"~"Trial design aligned with reported trial hypothesis",
   "condordance_sample_size"~"Sample size calculation based on clinical relevance",
   "RCT_clinical_discussion_interpretation"~"Results interpreted based on clinical relevance"
 #  "phase_pilot" ~ "Phase of data collection"
@@ -105,9 +105,9 @@ labels_table_1 <- list(
 summary_table_1 <- total_87_167_v1 %>%
 dplyr::select(
     outcome,
-    condordance_aim,
-    condordance_design_aim,
     condordance_primary_endpoint,
+    #    condordance_aim,
+    condordance_design_aim,
     condordance_sample_size,
     RCT_clinical_discussion_interpretation,
     phase_pilot
@@ -128,7 +128,7 @@ dplyr::select(
   ) %>% 
   set_caption("Table 1. Assessment of ability of surgical RCTs to meaningfully inform clinical practice")
 #save
-save_as_docx(summary_table_1, path = "Final_phase_Article/output/tables/Table_1_Assessment_surgical_RCTs_clinical_practice.docx")
+save_as_docx(summary_table_1, path = "Final_phase_Article/output/tables/Table_1_Assessment_surgical_RCTs_clinical_practice_april27correction.docx")
 
 #create tbl_summary 2 comparing RCTs with registry documentation/unpublished protocol/published protocol
 summary_table <- 
