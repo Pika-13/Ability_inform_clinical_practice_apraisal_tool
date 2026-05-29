@@ -20,18 +20,17 @@ lapply(c("tibble" ,"tidyverse", "dplyr", "data.table", "colorspace", "readxl", "
 #step 1 combining data pilot and final
 #read tidied datasets
 database_pilot_v2 <- readr::read_csv("Final_phase_Article/database/database_pilot_v1.csv") %>% 
-  mutate(key = article_id) %>% 
-  dplyr::select(key, 
+ dplyr::select(key, 
          outcome,
          condordance_aim,
          condordance_primary_endpoint,
          condordance_design_aim,
          condordance_sample_size,
+         consensus_design_aim,
          RCT_clinical_discussion_interpretation,
          final_publication_significant_results,
          pretrial_document_type) %>% 
   add_column(phase_pilot=1)
-
 database_v2 <- read_csv("Final_phase_Article/database/database_vapril27.csv") %>% 
   dplyr::select(key, 
                 outcome,
@@ -39,6 +38,7 @@ database_v2 <- read_csv("Final_phase_Article/database/database_vapril27.csv") %>
                 condordance_primary_endpoint,
                 condordance_design_aim,
                 condordance_sample_size,
+                consensus_design_aim,
                 RCT_clinical_discussion_interpretation,
                 final_publication_significant_results,
                 pretrial_document_type) %>% 
@@ -50,6 +50,8 @@ total_87_167 <- rbind(database_pilot_v2, database_v2)
 total_87_167_v1 <- total_87_167 %>% 
   mutate(outcome = factor(outcome,levels=c(1,0,999),
                           labels =c("Yes","No","999")),
+         consensus_design_aim=factor(consensus_design_aim,levels=c(0,1,3,999),
+                                     labels =c("Superiority", "Non-inferiority", "Equivalence", "NA")),
          condordance_aim = factor(condordance_aim,levels=c(1,0,2,999),
                                   labels =c("Yes ", "No ", "Discrepancy between pretrial document and final RCT", "Not applicable")),
          condordance_primary_endpoint= factor(condordance_primary_endpoint,levels=c(1,0,2, 999),
@@ -130,7 +132,60 @@ dplyr::select(
 #save
 save_as_docx(summary_table_1, path = "Final_phase_Article/output/tables/Table_1_Assessment_surgical_RCTs_clinical_practice_april27correction.docx")
 
-#create tbl_summary 2 comparing RCTs with registry documentation/unpublished protocol/published protocol
-summary_table <- 
-  
+#add table with design of trials
+
+#specifying factor variables
+#ensure factor variables are factors
+discrete_variables <- c(
+  "outcome",
+  "condordance_aim",
+  "condordance_primary_endpoint",
+  "condordance_design_aim",
+  "condordance_sample_size",
+  "consensus_design_aim",
+  "RCT_clinical_discussion_interpretation",
+  "final_publication_significant_results",
+  "pretrial_document_type", 
+  "phase_pilot")
+total_87_167_v1[, discrete_variables] <- lapply(
+  total_87_167_v1[, discrete_variables], factor)
+
+#create labels
+labels_table_2 <- list(
+  "consensus_design_aim"~"Trial hypothesis corresponding to the trial design",
+    #  "phase_pilot" ~ "Phase of data collection"
+  "final_publication_significant_results"~"Statistical significance achieved for primary outcome"
+  #,pretrial_document_type ~ "Pretrial documentation type"
+)
+
+#create tbl_summary no comparison
+summary_table_2 <- total_87_167_v1 %>%
+  dplyr::select(
+    #outcome,
+    #condordance_primary_endpoint,
+    #condordance_aim,
+    #condordance_design_aim,
+    #condordance_sample_size,
+    consensus_design_aim,
+    final_publication_significant_results,
+    #RCT_clinical_discussion_interpretation,
+    phase_pilot
+    #,final_publication_results
+    #,pretrial_documentation_type
+  ) %>%
+  tbl_summary(
+    by=phase_pilot,
+    label = labels_table_2,
+    statistic = all_categorical() ~ "{n} ({p}%)" ,
+    missing = "no",
+    digits = list(
+      all_categorical() ~ c(0,1,0))
+  ) %>% 
+  as_flex_table() %>% 
+  add_footer_lines(values = "Results are expressed in numbers (percentage(%))" ) %>% 
+  add_footer_lines(values ="Abbreviations: NA, Not applicable; RCT, Randomized controlled trial"
+  ) %>% 
+  set_caption("ETable 1. Additional characteristics of surgical randomized controlled trials")
+#save
+save_as_docx(summary_table_2, path = "Final_phase_Article/output/tables/eTable_1_Additional_design_surgical_RCTs.docx")
 
